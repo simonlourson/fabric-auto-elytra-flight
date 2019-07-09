@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "id": "modid",
+  "id": "elytraautoflight",
   "version": "${version}",
 
-  "name": "Example Mod",
-  "description": "This is an example description! Tell everyone what your mod is about!",
+  "name": "Elytra Auto Flight",
+  "description": "This mod provides altitude and speed information for elytra flight, as well as automating an optimal flight profile to gain altitude.",
   "authors": [
-    "Me!"
+    "louislourson"
   ],
   "contact": {
     "homepage": "https://fabricmc.net/",
@@ -19,7 +19,7 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "net.fabricmc.example.ExampleMod"
+      "net.louislourson.elytraautoflight.ElytraAutoFlight"
     ]
   },
   "mixins": [
@@ -32,5 +32,10 @@
   },
   "suggests": {
     "flamingo": "*"
+  },
+
+  "custom": {
+    "modmenu:api": false,
+    "modmenu:clientsideOnly": true
   }
 }
