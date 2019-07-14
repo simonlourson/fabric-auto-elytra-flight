@@ -70,12 +70,7 @@ public class ElytraAutoFlight implements ModInitializer, net.fabricmc.api.Client
 
         this.configFile = new File(FabricLoader.getInstance().getConfigDirectory(), "elytraautoflight/config.json");
 
-        try {
-            loadSettings();
-        } catch (IOException e) {
-            config = new ElytraConfig();
-            e.printStackTrace();
-        }
+        loadSettings();
 	}
 
 	private void createAndShowSettings()
@@ -112,38 +107,41 @@ public class ElytraAutoFlight implements ModInitializer, net.fabricmc.api.Client
 
     }
 
-    private void loadSettings() throws IOException {
+    private void loadSettings() {
 
+	    config = new ElytraConfig();
 
         configFile.getParentFile().mkdirs();
 
+        /*
         if (!configFile.exists() && !configFile.createNewFile()) {
             System.out.println("[elytraautoflight] Failed to save config! Overwriting with default config.");
             config = new ElytraConfig();
             return;
         }
 
+         */
+
         try {
 
-            String result = JANKSON.toJson(config).toJson(true, true, 0);
+            //String result = JANKSON.toJson(config).toJson(true, true, 0);
             if (!configFile.exists())
                 configFile.createNewFile();
-            FileOutputStream out = new FileOutputStream(configFile, false);
+            //FileOutputStream out = new FileOutputStream(configFile, false);
 
-            out.write(result.getBytes());
-            out.flush();
-            out.close();
+            //out.write(result.getBytes());
+            //out.flush();
+            //out.close();
         } catch (Exception e) {
             e.printStackTrace();
-            RoughlyEnoughItemsCore.LOGGER.error("[REI] Failed to save config! Overwriting with default config.");
-            config = new ConfigObject();
+            //RoughlyEnoughItemsCore.LOGGER.error("[REI] Failed to save config! Overwriting with default config.");
+            //config = new ConfigObject();
             return;
         }
 
     }
 
-	private void onTick()
-    {
+	private void onTick() {
 
         if (minecraftClient == null) minecraftClient = MinecraftClient.getInstance();
         if (config == null) loadSettings();
