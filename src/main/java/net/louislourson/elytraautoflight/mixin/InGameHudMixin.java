@@ -44,7 +44,7 @@ public class InGameHudMixin {
 
 				if (elytraAutoFlight.config.showGraph) {
 
-					DrawableHelper.fill(elytraAutoFlight.config.guiX, elytraAutoFlight.config.guiY, elytraAutoFlight.config.guiX + elytraAutoFlight.config.guiWidth, elytraAutoFlight.config.guiY + elytraAutoFlight.config.guiHeight, 0x44000000);
+					DrawableHelper.fill(elytraAutoFlight.config.guiX, elytraAutoFlight.config.guiY, elytraAutoFlight.config.guiX + elytraAutoFlight.config.guiWidth, elytraAutoFlight.config.guiY + elytraAutoFlight.config.guiHeight, 0x44FFFFFF);
 
 
 					double maxAltitude = 0;
