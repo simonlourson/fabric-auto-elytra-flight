@@ -13,6 +13,9 @@ group = project.maven_group
 minecraft {
 }
 
+repositories {
+	jcenter()
+}
 dependencies {
 	//to change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -21,6 +24,8 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modCompile "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+	modCompile "me.shedaniel.cloth:config-2:0.4"
+	implementation "com.google.code.gson:gson:2.8.5"
 
 	// PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
 	// You may need to force-disable transitiveness on them.

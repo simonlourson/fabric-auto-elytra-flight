@@ -9,94 +9,144 @@ import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormats;
-import net.minecraft.util.math.Vec2f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.LinkedList;
-
 @Mixin(InGameHud.class)
 public class InGameHudMixin {
-	@Inject(at = @At(value = "HEAD"), method = "draw")
-	private void drawPre(float partialTicks, CallbackInfo ci) {
-		if (!ci.isCancelled()) {
-			//System.out.println("drawPre mixin!");
-			//InGameHudDrawCallback.Pre.EVENT.invoker().draw(partialTicks);
-		}
-	}
+
+
+	MinecraftClient minecraftClient;
+	ElytraAutoFlight elytraAutoFlight;
 
 	@Inject(at = @At(value = "RETURN"), method = "draw")
 	private void drawPost(float partialTicks, CallbackInfo ci) {
 		if (!ci.isCancelled()) {
-			//System.out.println("drawPost mixin!");
-			//InGameHudDrawCallback.Post.EVENT.invoker().draw(partialTicks);
 
-			ElytraAutoFlight elytraAutoFlight = ElytraAutoFlight.instance;
+			if (minecraftClient == null) minecraftClient = MinecraftClient.getInstance();
+			if (elytraAutoFlight == null) elytraAutoFlight = ElytraAutoFlight.instance;
 
 			if (elytraAutoFlight.showHud) {
-				MinecraftClient.getInstance().textRenderer.drawWithShadow(
-						elytraAutoFlight.hudString, 5, 100, 0xFFFFFF);
 
-				DrawableHelper.fill(elytraAutoFlight.guiX, elytraAutoFlight.guiY, elytraAutoFlight.guiX + elytraAutoFlight.guiWidth, elytraAutoFlight.guiY + elytraAutoFlight.guiHeight, 0x55FFFFFF);
+				if (elytraAutoFlight.hudString != null) {
+					float stringX = elytraAutoFlight.config.guiX;
+					float stringY = elytraAutoFlight.config.guiY + elytraAutoFlight.config.guiHeight + 2;
 
-				double maxAltitude = 0;
-				for (GraphDataPoint p : elytraAutoFlight.graph) {
-					if (p.realPosition.y > maxAltitude) maxAltitude = p.realPosition.y;
+					for (int i = 0; i < elytraAutoFlight.hudString.length; i++) {
+						minecraftClient.textRenderer.drawWithShadow(
+								elytraAutoFlight.hudString[i], stringX, stringY, 0xFFFFFF);
+
+						stringY += minecraftClient.textRenderer.fontHeight + 1;
+					}
 				}
 
+				if (elytraAutoFlight.config.showGraph) {
 
-				if (maxAltitude > 0) {
-					double currentXd = 0;
-					double currentYd = 0;
+					DrawableHelper.fill(elytraAutoFlight.config.guiX, elytraAutoFlight.config.guiY, elytraAutoFlight.config.guiX + elytraAutoFlight.config.guiWidth, elytraAutoFlight.config.guiY + elytraAutoFlight.config.guiHeight, 0xff000000);
 
-					float float_1 = (float)(0xFFFF0000 >> 24 & 255) / 255.0F;
-					float float_2 = (float)(0xFFFF0000 >> 16 & 255) / 255.0F;
-					float float_3 = (float)(0xFFFF0000 >> 8 & 255) / 255.0F;
-					float float_4 = (float)(0xFFFF0000 & 255) / 255.0F;
 
-					Tessellator tessellator_1 = Tessellator.getInstance();BufferBuilder bufferBuilder_1 = tessellator_1.getBufferBuilder();
-					GlStateManager.enableBlend();
-					GlStateManager.disableTexture();
-					GlStateManager.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
-					GlStateManager.color4f(float_2, float_3, float_4, float_1);
-					bufferBuilder_1.begin(3, VertexFormats.POSITION);
-
+					double maxAltitude = 0;
+					double minAltitude = 999;
 					for (GraphDataPoint p : elytraAutoFlight.graph) {
-						int currentX = (int)currentXd;
-						int currentY = (int)(p.realPosition.y * elytraAutoFlight.guiHeight / maxAltitude);
-
-						double screenX = elytraAutoFlight.guiX + currentX;
-						double screenY = elytraAutoFlight.guiY + elytraAutoFlight.guiHeight - currentY;
-
-						bufferBuilder_1.vertex(screenX, screenY, 0.0D).next();
-
-						currentXd += p.horizontalDelta * elytraAutoFlight.guiWidth / elytraAutoFlight.guiGraphRealWidth;
+						if (p.realPosition.y > maxAltitude) maxAltitude = p.realPosition.y;
+						if (p.realPosition.y < minAltitude) minAltitude = p.realPosition.y;
 					}
 
-					tessellator_1.draw();
-					GlStateManager.enableTexture();
-					GlStateManager.disableBlend();
+					if (maxAltitude > 0) {
+
+						maxAltitude += 5;
+						minAltitude -= 40;
+
+						beginDrawLineColor();
+
+						double currentX = 0;
+						double currentY;
+						for (GraphDataPoint p : elytraAutoFlight.graph) {
+
+							currentY = ((p.realPosition.y - minAltitude) * elytraAutoFlight.config.guiHeight / (maxAltitude - minAltitude));
+
+							double screenX = elytraAutoFlight.config.guiX + currentX;
+							double screenY = elytraAutoFlight.config.guiY + elytraAutoFlight.config.guiHeight - currentY;
+
+							float speedRatio = (float) p.velocity / 3f;
+
+							float r = 2 * (1 - speedRatio);
+							float g = 2 * speedRatio;
+
+							if (r > 1) r = 1;
+							if (g > 1) g = 1;
+							if (r < 0) r = 0;
+							if (g < 0) g = 0;
+
+							addLinePointColor(screenX, screenY, 0, 1, r, g, 0);
+
+							currentX += p.horizontalDelta * (elytraAutoFlight.config.guiWidth - 1) / elytraAutoFlight.config.guiGraphRealWidth;
+						}
+
+						endDrawLine();
 
 
+						beginDrawLine(0xFF000000);
+						addLinePoint(elytraAutoFlight.config.guiX, elytraAutoFlight.config.guiY, 0);
+						addLinePoint(elytraAutoFlight.config.guiX, elytraAutoFlight.config.guiY + elytraAutoFlight.config.guiHeight, 0);
+						addLinePoint(elytraAutoFlight.config.guiX + elytraAutoFlight.config.guiWidth, elytraAutoFlight.config.guiY + elytraAutoFlight.config.guiHeight, 0);
+						addLinePoint(elytraAutoFlight.config.guiX + elytraAutoFlight.config.guiWidth, elytraAutoFlight.config.guiY, 0);
+						addLinePoint(elytraAutoFlight.config.guiX, elytraAutoFlight.config.guiY, 0);
+						endDrawLine();
 
 
+					}
 				}
-
 			}
 		}
 	}
 
+	private Tessellator tessellator_1;
+	private BufferBuilder bufferBuilder_1;
+	private void beginDrawLine(int color)
+	{
+		float float_1 = (float)(color >> 24 & 255) / 255.0F;
+		float float_2 = (float)(color >> 16 & 255) / 255.0F;
+		float float_3 = (float)(color >> 8 & 255) / 255.0F;
+		float float_4 = (float)(color & 255) / 255.0F;
+
+		tessellator_1 = Tessellator.getInstance();
+		bufferBuilder_1 = tessellator_1.getBufferBuilder();
+		GlStateManager.enableBlend();
+		GlStateManager.disableTexture();
+		GlStateManager.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+		GlStateManager.color4f(float_2, float_3, float_4, float_1);
+		bufferBuilder_1.begin(3, VertexFormats.POSITION);
+	}
+
+	private void beginDrawLineColor()
+	{
+		tessellator_1 = Tessellator.getInstance();
+		bufferBuilder_1 = tessellator_1.getBufferBuilder();
+		GlStateManager.enableBlend();
+		GlStateManager.disableTexture();
+		GlStateManager.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.ONE, GlStateManager.DestFactor.ZERO);
+		GlStateManager.color4f(1, 1, 1, 1);
+		bufferBuilder_1.begin(3, VertexFormats.POSITION_COLOR);
+	}
+
+	private void addLinePoint(double x, double y, double z)
+	{
+		bufferBuilder_1.vertex(x, y, z).next();
+	}
+
+	private void addLinePointColor(double x, double y, double z, float a, float r, float g, float b)
+	{
+		bufferBuilder_1.vertex(x, y, z).color(r, g, b, a).next();
+	}
+
+	private void endDrawLine()
+	{
+		tessellator_1.draw();
+		GlStateManager.enableTexture();
+		GlStateManager.disableBlend();
+	}
+
 }
-
-
-/*
-						DrawableHelper.fill(
-								elytraAutoFlight.guiX + currentX,
-								elytraAutoFlight.guiY + elytraAutoFlight.guiHeight - currentY,
-								elytraAutoFlight.guiX + currentX + elytraAutoFlight.guiGraphDotWidth,
-								elytraAutoFlight.guiY + elytraAutoFlight.guiHeight - currentY + elytraAutoFlight.guiGraphDotWidth,
-								0xFFFF0000);
-
- */

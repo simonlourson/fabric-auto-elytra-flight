@@ -6,6 +6,9 @@ import net.minecraft.util.math.Vec3d;
 public class GraphDataPoint {
     public Vec3d realPosition;
     public double horizontalDelta;
+    public double velocity;
+    public boolean pullUp;
+    public boolean pullDown;
 
     public GraphDataPoint(Vec3d realPosition) {
         this.realPosition = realPosition;
