@@ -9,6 +9,10 @@ import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormats;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.mob.DrownedEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.TridentItem;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -28,6 +32,23 @@ public class InGameHudMixin {
 			if (minecraftClient == null) minecraftClient = MinecraftClient.getInstance();
 			if (elytraAutoFlight == null) elytraAutoFlight = ElytraAutoFlight.instance;
 
+			if (elytraAutoFlight.drownedList != null) {
+				float drownedX = elytraAutoFlight.config.guiX;
+				float drownedY = elytraAutoFlight.config.guiY;
+				for (DrownedEntity drowned : elytraAutoFlight.drownedList) {
+
+					int color = 0xFFFFFF;
+					if ("trident".equals(drowned.getEquippedStack(EquipmentSlot.MAINHAND).getItem().toString())) {
+						color = 0xFFFFFF;
+						minecraftClient.textRenderer.drawWithShadow(
+								elytraAutoFlight.getDrownedString(drowned), drownedX, drownedY, color);
+						drownedY += minecraftClient.textRenderer.fontHeight + 1;
+					}
+
+
+				}
+			}
+
 			if (elytraAutoFlight.showHud) {
 
 				if (elytraAutoFlight.hudString != null) {
@@ -39,6 +60,7 @@ public class InGameHudMixin {
 								elytraAutoFlight.hudString[i], stringX, stringY, 0xFFFFFF);
 
 						stringY += minecraftClient.textRenderer.fontHeight + 1;
+
 					}
 				}
 

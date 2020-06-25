@@ -12,16 +12,38 @@ import net.fabricmc.fabric.api.event.client.ClientTickCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.entity.mob.DrownedEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 public class ElytraAutoFlight implements ModInitializer, net.fabricmc.api.ClientModInitializer {
 
+    public ArrayList<DrownedEntity> drownedList;
+    public void addDrowned(DrownedEntity drowned) {
+        if (drownedList == null) drownedList = new ArrayList<>();
+
+        drownedList.add(drowned);
+    }
+
+    public String getDrownedString(DrownedEntity drowned) {
+        String returnString = "Drowned with trident " + drowned.getEntityId() + ": ";
+
+        int deltaX = (int)(drowned.getPos().x - minecraftClient.player.getPos().x);
+        int deltaZ = (int)(drowned.getPos().z - minecraftClient.player.getPos().z);
+
+        String westEast = deltaX < 0 ? "West" : "East";
+        String northSouth = deltaZ < 0 ? "North" : "South";
+
+        returnString = returnString + Math.abs(deltaX) + " blocks " + westEast + ", " + Math.abs(deltaZ) + " blocks " + northSouth + ", " + (int)drowned.getPos().y;
+
+        return returnString;
+    }
 
     public ElytraConfig config;
 
@@ -145,6 +167,11 @@ public class ElytraAutoFlight implements ModInitializer, net.fabricmc.api.Client
 
         if (minecraftClient == null) minecraftClient = MinecraftClient.getInstance();
         if (config == null) loadSettings();
+
+        if (drownedList != null) {
+            drownedList.removeIf(x -> x.removed);
+
+        }
 
         if (minecraftClient.player != null) {
 
